@@ -13,7 +13,8 @@ prompts = [
 sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
 
 # Create an LLM.
-llm = LLM(model="facebook/opt-125m")
+# 使用本地模型完成代码调试学习过程，首次代码注释测试
+llm = LLM(model="/llm/nankai/wanghui_space/llama2/Llama-2-7b-chat-hf")
 # Generate texts from the prompts. The output is a list of RequestOutput objects
 # that contain the prompt, generated text, and other information.
 outputs = llm.generate(prompts, sampling_params)
