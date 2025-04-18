@@ -120,6 +120,7 @@ class BackgroundProcHandle:
         self._finalizer = weakref.finalize(self, shutdown, self.proc,
                                            input_path, output_path)
         self.proc.start()
+        logger.info(f"BackgroundProcHandle EngineCoreProc.run_engine_core: Starting process")
 
     def fileno(self):
         return self.proc.sentinel

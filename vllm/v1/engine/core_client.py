@@ -548,6 +548,7 @@ class SyncMPClient(MPClient):
                     frames = out_socket.recv_multipart(copy=False)
                     resources.validate_alive(frames)
                     outputs = decoder.decode(frames)
+                    logger.info(f"SyncMPClient process_outputs_socket: Received outputs: {outputs}")
                     if outputs.utility_output:
                         _process_utility_output(outputs.utility_output,
                                                 utility_results)
@@ -565,12 +566,14 @@ class SyncMPClient(MPClient):
                                           name="EngineCoreOutputQueueThread",
                                           daemon=True)
         self.output_queue_thread.start()
+        logger.info(f"SyncMPClient output_queue_thread: Starting thread")
 
     def get_output(self) -> EngineCoreOutputs:
         # If an exception arises in process_outputs_socket task,
         # it is forwarded to the outputs_queue so we can raise it
         # from this (run_output_handler) task to shut down the server.
         outputs = self.outputs_queue.get()
+        logger.info(f"SyncMPClient get outputs_queue: Received outputs: {outputs}")
         if isinstance(outputs, Exception):
             raise self._format_exception(outputs) from None
         return outputs
@@ -582,13 +585,16 @@ class SyncMPClient(MPClient):
         msg = (self.core_engine.identity, request_type.value,
                *self.encoder.encode(request))
 
+
         if len(msg) <= 3:
             # No auxiliary buffers => no tensor backing buffers in request.
             self.input_socket.send_multipart(msg, copy=False)
             return
-
+        logger.info(f"SyncMPClient _send_input: Sending message: {msg}")
         tracker = self.input_socket.send_multipart(msg, copy=False, track=True)
         self.add_pending_message(tracker, request)
+
+
 
     def call_utility(self, method: str, *args) -> Any:
         call_id = uuid.uuid1().int >> 64

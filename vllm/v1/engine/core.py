@@ -377,11 +377,13 @@ class EngineCoreProc(EngineCore):
         threading.Thread(target=self.process_input_socket,
                          args=(input_path, engine_index),
                          daemon=True).start()
+        logger.info(f"EngineCoreProc process_input_socket: Starting thread")
         self.output_thread = threading.Thread(
             target=self.process_output_socket,
             args=(output_path, engine_index),
             daemon=True)
         self.output_thread.start()
+        logger.info(f"EngineCoreProc process_output_socket: Starting thread")
 
     @staticmethod
     def run_engine_core(*args,
@@ -455,6 +457,7 @@ class EngineCoreProc(EngineCore):
                 logger.debug("EngineCore waiting for work.")
                 waited = True
             req = self.input_queue.get()
+            logger.info(f"EngineCoreProc run_busy_loop get input_queue: Received request: {req}")
             self._handle_client_request(*req)
 
         if waited:
@@ -558,7 +561,7 @@ class EngineCoreProc(EngineCore):
                     request_type
                     == EngineCoreRequestType.ADD) else generic_decoder
                 request = decoder.decode(data_frames)
-
+                logger.info(f"EngineCoreProc process_input_socket recv input_socket: Received request: {request}")
                 # Push to input queue for core busy loop.
                 self.input_queue.put_nowait((request_type, request))
 
@@ -584,6 +587,7 @@ class EngineCoreProc(EngineCore):
                     socket.send(outputs, copy=False)
                     break
                 assert not isinstance(outputs, bytes)
+                logger.info(f"EngineCoreProc process_output_socket get output_queue: Sending outputs: {outputs}")
                 outputs.engine_index = engine_index
 
                 # Reclaim buffers that zmq is finished with.
