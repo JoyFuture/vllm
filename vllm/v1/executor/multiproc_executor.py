@@ -166,11 +166,7 @@ class MultiprocExecutor(Executor):
 
     def collective_rpc(self,
                        method: Union[str, Callable],
-<<<<<<< HEAD
-                       timeout: Optional[float] = None,
-=======
                        timeout: Optional[float] = 1800.0,
->>>>>>> 修复代码缩进问题，更新分布式执行器后端为mp，并在KVCacheManager和MultiprocExecutor中添加注释以增强可读性。同时，更新日志记录信息以更清晰地描述发送消息的过程。
                        args: tuple = (),
                        kwargs: Optional[dict] = None,
                        non_block: bool = False,

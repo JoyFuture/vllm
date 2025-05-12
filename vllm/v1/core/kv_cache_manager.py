@@ -247,19 +247,15 @@ class KVCacheManager:
         if num_blocks_to_allocate > self.block_pool.get_num_free_blocks():
 =======
                                len(new_computed_blocks) * self.block_size)
-        # 总共需要的block数量：已经计算过的token和需要计算的token数量除以block_size
         num_required_blocks = cdiv(
             num_computed_tokens + num_tokens + num_lookahead_tokens,
             self.block_size)
-        # 新增的block数量：总共需要的block数量 减去 该req已经有的block数量和该req命中prefix cache的block数量
         num_new_blocks = (num_required_blocks - len(req_blocks) -
                           len(new_computed_blocks))
 
         # If a computed block of a request is an eviction candidate (in the
         # free queue and ref_cnt == 0), it cannot be counted as a free block
         # when allocating this request.
-        # 如果一个请求的计算块是一个驱逐候选块（在空闲队列中且 ref_cnt == 0），
-        # 在为该请求分配时，它不能被计为一个空闲块。
         num_evictable_computed_blocks = sum(1 for blk in new_computed_blocks
                                             if blk.ref_cnt == 0)
         if (num_new_blocks > self.block_pool.get_num_free_blocks() -
