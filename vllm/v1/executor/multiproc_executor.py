@@ -77,6 +77,7 @@ class MultiprocExecutor(Executor):
         unready_workers: list[UnreadyWorkerProcHandle] = []
         success = False
         try:
+            # 遍历world_size，对每个rank都创建一个worker进程，并将创建后的worker加入到队列中记录下来
             for rank in range(self.world_size):
                 unready_workers.append(
                     WorkerProc.make_worker_process(
@@ -165,7 +166,11 @@ class MultiprocExecutor(Executor):
 
     def collective_rpc(self,
                        method: Union[str, Callable],
+<<<<<<< HEAD
                        timeout: Optional[float] = None,
+=======
+                       timeout: Optional[float] = 1800.0,
+>>>>>>> 修复代码缩进问题，更新分布式执行器后端为mp，并在KVCacheManager和MultiprocExecutor中添加注释以增强可读性。同时，更新日志记录信息以更清晰地描述发送消息的过程。
                        args: tuple = (),
                        kwargs: Optional[dict] = None,
                        non_block: bool = False,

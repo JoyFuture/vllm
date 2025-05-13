@@ -584,6 +584,7 @@ class SyncMPClient(MPClient):
         # (Identity, RequestType, SerializedRequest)
         msg = (self.core_engine.identity, request_type.value,
                *self.encoder.encode(request))
+<<<<<<< HEAD
 
 
         if len(msg) <= 3:
@@ -595,6 +596,10 @@ class SyncMPClient(MPClient):
         self.add_pending_message(tracker, request)
 
 
+=======
+        logger.info(f"SyncMPClient send input_socket: Sending message: {msg}")
+        self.input_socket.send_multipart(msg, copy=False)
+>>>>>>> 修复代码缩进问题，更新分布式执行器后端为mp，并在KVCacheManager和MultiprocExecutor中添加注释以增强可读性。同时，更新日志记录信息以更清晰地描述发送消息的过程。
 
     def call_utility(self, method: str, *args) -> Any:
         call_id = uuid.uuid1().int >> 64

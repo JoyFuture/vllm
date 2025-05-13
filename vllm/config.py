@@ -1862,7 +1862,7 @@ class ParallelConfig:
                         backend)
 
         if self.distributed_executor_backend is None and self.world_size == 1:
-            self.distributed_executor_backend = "uni"
+            self.distributed_executor_backend = "mp"
 
         self._verify_args()
 

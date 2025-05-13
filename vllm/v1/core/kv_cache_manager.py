@@ -228,7 +228,11 @@ class KVCacheManager:
 
         # The number of computed tokens is the number of computed tokens plus
         # the new prefix caching hits
+        # 已经算过的token：等于req中记录的以前算过的token数量（num_computed_tokens）加上这一次调度在prefix cache中命中的token数量（new_computed_blocks）
+        # 对running队列中的req来说，调用此函数时传入的new_computed_blocks为0（也就是说running队列中的seq不会命中prefix cache）
+        # 对waiting队列中的req来说，req对象的num_computed_tokens为0（被抢占的req的num_computed_tokens会被清空为0），
         num_computed_tokens = (request.num_computed_tokens +
+<<<<<<< HEAD
                                len(new_computed_block_list) * self.block_size)
         num_tokens_need_slot = min(
             num_computed_tokens + num_new_tokens + num_lookahead_tokens,
@@ -241,6 +245,26 @@ class KVCacheManager:
             ))
 
         if num_blocks_to_allocate > self.block_pool.get_num_free_blocks():
+=======
+                               len(new_computed_blocks) * self.block_size)
+        # 总共需要的block数量：已经计算过的token和需要计算的token数量除以block_size
+        num_required_blocks = cdiv(
+            num_computed_tokens + num_tokens + num_lookahead_tokens,
+            self.block_size)
+        # 新增的block数量：总共需要的block数量 减去 该req已经有的block数量和该req命中prefix cache的block数量
+        num_new_blocks = (num_required_blocks - len(req_blocks) -
+                          len(new_computed_blocks))
+
+        # If a computed block of a request is an eviction candidate (in the
+        # free queue and ref_cnt == 0), it cannot be counted as a free block
+        # when allocating this request.
+        # 如果一个请求的计算块是一个驱逐候选块（在空闲队列中且 ref_cnt == 0），
+        # 在为该请求分配时，它不能被计为一个空闲块。
+        num_evictable_computed_blocks = sum(1 for blk in new_computed_blocks
+                                            if blk.ref_cnt == 0)
+        if (num_new_blocks > self.block_pool.get_num_free_blocks() -
+                num_evictable_computed_blocks):
+>>>>>>> 修复代码缩进问题，更新分布式执行器后端为mp，并在KVCacheManager和MultiprocExecutor中添加注释以增强可读性。同时，更新日志记录信息以更清晰地描述发送消息的过程。
             # Cannot allocate new blocks
             return None
 
@@ -254,8 +278,15 @@ class KVCacheManager:
 
         # Append the new computed blocks to the request blocks until now to
         # avoid the case where the new blocks cannot be allocated.
+<<<<<<< HEAD
         self.single_type_manager.save_new_computed_blocks(
             request.request_id, new_computed_block_list)
+=======
+        # 将新的计算块追加到当前请求的块列表中，以避免出现无法分配新块的情况。
+        req_blocks.extend(new_computed_blocks)
+
+        # Start to handle new blocks
+>>>>>>> 修复代码缩进问题，更新分布式执行器后端为mp，并在KVCacheManager和MultiprocExecutor中添加注释以增强可读性。同时，更新日志记录信息以更清晰地描述发送消息的过程。
 
         new_blocks = self.single_type_manager.allocate_new_blocks(
             request.request_id, num_tokens_need_slot)
