@@ -15,10 +15,7 @@ sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
 
 def main():
     # Create an LLM.
-<<<<<<< HEAD
-=======
     # 使用本地模型完成代码调试学习过程，首次代码注释测试
->>>>>>> 修复代码缩进问题，更新分布式执行器后端为mp，并在KVCacheManager和MultiprocExecutor中添加注释以增强可读性。同时，更新日志记录信息以更清晰地描述发送消息的过程。
     llm = LLM(model="/llm/nankai/wanghui_space/llama2/Llama-2-7b-chat-hf")
     # Generate texts from the prompts.
     # The output is a list of RequestOutput objects
