@@ -1367,6 +1367,17 @@ class Scheduler:
         prefill and decodes requests to the same batch, while it improves
         inter token latency because decodes requests don't need to be blocked
         by prefill requests.
+        调度排队的请求。
+
+        分块预填充（Chunked prefill）允许将预填充请求进行分块，并与解码请求一起批量处理。该策略的调度顺序如下：
+
+        1. 尽可能多地调度解码请求；
+        2. 调度尚未完成的分块预填充请求；
+        3. 调度已被换出的请求；
+        4. 调度新的预填充请求。
+
+        该策略能够维持高GPU利用率，因为它可以将预填充请求和解码请求放在同一个批次中处理；同时也提升了词元间的延迟性能，因为解码请求不再需要被预填充请求所阻塞。
+
         """
         budget = SchedulingBudget(
             token_budget=self.scheduler_config.max_num_batched_tokens,

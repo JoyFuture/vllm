@@ -51,11 +51,11 @@ class EngineCoreClient(ABC):
 
     @staticmethod
     def make_client(
-        multiprocess_mode: bool,
-        asyncio_mode: bool,
-        vllm_config: VllmConfig,
-        executor_class: type[Executor],
-        log_stats: bool,
+        multiprocess_mode: bool,# 是否使用多进程模式
+        asyncio_mode: bool,# 是否使用异步IO模式
+        vllm_config: VllmConfig,# vLLM配置对象
+        executor_class: type[Executor],# 执行器类型
+        log_stats: bool,# 是否记录统计信息
     ) -> "EngineCoreClient":
 
         # TODO: support this for debugging purposes.
@@ -63,17 +63,17 @@ class EngineCoreClient(ABC):
             raise NotImplementedError(
                 "Running EngineCore in asyncio without multiprocessing "
                 "is not currently supported.")
+        # 多进程+异步模式
+        if multiprocess_mode and asyncio_mode:# 如果同时使用多进程和异步IO模式
+            if vllm_config.parallel_config.data_parallel_size > 1:# 如果数据并行大小大于1
+                return DPAsyncMPClient(vllm_config, executor_class, log_stats)# 返回数据并行异步多进程客户端
 
-        if multiprocess_mode and asyncio_mode:
-            if vllm_config.parallel_config.data_parallel_size > 1:
-                return DPAsyncMPClient(vllm_config, executor_class, log_stats)
+            return AsyncMPClient(vllm_config, executor_class, log_stats)# 返回异步多进程客户端
 
-            return AsyncMPClient(vllm_config, executor_class, log_stats)
+        if multiprocess_mode and not asyncio_mode:# 如果只使用多进程模式
+            return SyncMPClient(vllm_config, executor_class, log_stats)# 返回同步多进程客户端
 
-        if multiprocess_mode and not asyncio_mode:
-            return SyncMPClient(vllm_config, executor_class, log_stats)
-
-        return InprocClient(vllm_config, executor_class, log_stats)
+        return InprocClient(vllm_config, executor_class, log_stats)# 返回内联客户端
 
     @abstractmethod
     def shutdown(self):
@@ -373,12 +373,12 @@ class MPClient(EngineCoreClient):
         log_stats: bool,
     ):
         self.vllm_config = vllm_config
-        # Serialization setup.
-        self.encoder = MsgpackEncoder()
-        self.decoder = MsgpackDecoder(EngineCoreOutputs)
+        # Serialization setup.编码器和解码器在vLLM中的主要用途就是将EngineCoreRequest和EngineCoreOutputs对象进行序列化和反序列化，以便通过进程间通信传递
+        self.encoder = MsgpackEncoder()# 创建消息包编码器
+        self.decoder = MsgpackDecoder(EngineCoreOutputs)# 创建消息包解码器
 
         # ZMQ setup.
-        sync_ctx = zmq.Context(io_threads=2)
+        sync_ctx = zmq.Context(io_threads=2)# 创建同步上下文
         self.ctx = zmq.asyncio.Context(sync_ctx) if asyncio_mode else sync_ctx
 
         # This will ensure resources created so far are closed

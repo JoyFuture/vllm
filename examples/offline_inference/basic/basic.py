@@ -16,7 +16,10 @@ sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
 def main():
     # Create an LLM.
     # 使用本地模型完成代码调试学习过程，首次代码注释测试
-    llm = LLM(model="/llm/nankai/wanghui_space/llama2/Llama-2-7b-chat-hf")
+    llm = LLM(model="/llm/nankai/wanghui_space/llama2/Llama-2-7b-chat-hf",enforce_eager=True,tensor_parallel_size=2)
+    # llm = LLM(model="/llm/HFModels/Qwen2.5-0.5B",enforce_eager=True,tensor_parallel_size=2)
+    # llm = LLM(model="/llm/HFModels/Moonlight-16B-A3B",trust_remote_code=True,
+    #       tensor_parallel_size=2)
     # Generate texts from the prompts.
     # The output is a list of RequestOutput objects
     # that contain the prompt, generated text, and other information.

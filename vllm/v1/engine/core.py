@@ -452,7 +452,10 @@ class EngineCoreProc(EngineCore):
         """Exits when an engine step needs to be performed."""
 
         waited = False
+        # 如果engine没有运行，并且没有请求，则阻塞等待请求到来，推理引擎启动以后，就不会再走这个循环
         while not self.engines_running and not (self.scheduler.has_requests()):
+            # 如果logger是debug级别，并且input_queue是空的，则打印debug日志，并且将waited置为True
+            # waited 标志记录是否真的处于“等待状态”，在状态变化时输出相应调试信息，帮助排查和监控运行状态。
             if logger.isEnabledFor(DEBUG) and self.input_queue.empty():
                 logger.debug("EngineCore waiting for work.")
                 waited = True
@@ -464,6 +467,7 @@ class EngineCoreProc(EngineCore):
             logger.debug("EngineCore loop active.")
 
         # Handle any more client requests.
+        # 后续直接进来判断队列是否有请求，如果有就非阻塞获取请求，没有就退出循环
         while not self.input_queue.empty():
             req = self.input_queue.get_nowait()
             self._handle_client_request(*req)

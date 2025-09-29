@@ -181,8 +181,10 @@ class GroupCoordinator:
     """
 
     # available attributes:
-    rank: int  # global rank
-    ranks: List[int]  # global ranks in the group
+    rank: int  # global rank独特的id，假设TP=2，PP=4，则rank=0,1,2,3,4,5,6,7
+    ranks: List[int]  # global ranks in the group 
+    #由于TP=2，那么以TP来看每个rank就有另一个rank相联系，ranks的数据结构长度就是2，ranks[0]和ranks[1]就是相联系的rank
+    #PP=4，那么以PP来看就是4个rank作为一个小群，所以总共有8个小群
     world_size: int  # size of the group
     # difference between `local_rank` and `rank_in_group`:
     # if we have a group of size 4 across two nodes:
@@ -191,13 +193,34 @@ class GroupCoordinator:
     #   1     |   0  |  1   |     1      |       1
     #   2     |   1  |  2   |     0      |       2
     #   3     |   1  |  3   |     1      |       3
-    local_rank: int  # local rank used to assign devices
+    local_rank: int  # local rank used to assign devices 指定的GPU编号
     rank_in_group: int  # rank inside the group
-    cpu_group: ProcessGroup  # group for CPU communication
-    device_group: ProcessGroup  # group for device communication
-    use_device_communicator: bool  # whether to use device communicator
-    device_communicator: DeviceCommunicatorBase  # device communicator
-    mq_broadcaster: Optional[Any]  # shared memory broadcaster
+    cpu_group: ProcessGroup  # group for CPU communication 坏处是慢，好处是可控性高，barrier同步等待
+    device_group: ProcessGroup  # group for device communication 
+    # gpu之间nvlink direct communication between GPUs
+    # Infinity Band :between nodes
+    # RDMA:Remote direct memory access.
+        # RDMA NIC;
+        # Software solution;
+        # Key advantage:bypass operating system / zero copy
+    # Communication library: vllm/distributed/device_communicators
+        # PyNCCL:communication for NVIDIA
+        # shared memory:OS
+        # custom allreduce:A kernel just for allreduce operation
+            # Before:
+                # 0 machine: [0]
+                # 1 machine: [1]
+                # 2 machine: [2]
+                # 3 machine: [3]
+            # After:
+                # 0 machine: [0,1,2,3]
+                # 1 machine: [0,1,2,3]
+                # 2 machine: [0,1,2,3]
+                # 3 machine: [0,1,2,3]
+        # torch.distributed :provide wide support to a list of communication librarie
+    use_device_communicator: bool  # whether to use device communicator 是否使用device communicator
+    device_communicator: DeviceCommunicatorBase  # device communicator 设备通信器
+    mq_broadcaster: Optional[Any]  # shared memory broadcaster 共享内存广播器
 
     def __init__(
         self,

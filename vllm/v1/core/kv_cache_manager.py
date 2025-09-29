@@ -307,10 +307,12 @@ class KVCacheManager:
     ) -> int:
         """Calculate the number of common prefix blocks shared by all requests
         in the RUNNING state.
-
+        计算所有处于运行中状态的请求所共享的公共前缀块数量。
         The function determines this by selecting any request and iterating
         through its blocks.  A block is considered a common prefix block if its
         `ref_cnt` equals the total number of requests in the RUNNING state.
+        本函数通过任选一个运行中请求，然后遍历该请求的所有块来进行判断。
+        如果一个块的`ref_cnt`引用计数等于所有运行中状态的请求数量，则该块被视为公共前缀块。
 
         NOTE(woosuk): The number of requests in the RUNNING state is **greater
         than or equal to** the number of requests scheduled in the current step.

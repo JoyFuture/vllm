@@ -42,11 +42,11 @@ class LLMEngine:
         vllm_config: VllmConfig,
         executor_class: type[Executor],
         log_stats: bool,
-        usage_context: UsageContext = UsageContext.ENGINE_CONTEXT,
-        stat_loggers: Optional[list[StatLoggerFactory]] = None,
-        mm_registry: MultiModalRegistry = MULTIMODAL_REGISTRY,
-        use_cached_outputs: bool = False,
-        multiprocess_mode: bool = False,
+        usage_context: UsageContext = UsageContext.ENGINE_CONTEXT,# 使用上下文，默认为引擎上下文
+        stat_loggers: Optional[list[StatLoggerFactory]] = None,# 可选的统计日志记录器工厂列表
+        mm_registry: MultiModalRegistry = MULTIMODAL_REGISTRY,# 多模态注册表
+        use_cached_outputs: bool = False,# 是否使用缓存输出的标志
+        multiprocess_mode: bool = False,# 是否启用多进程模式的标志
     ) -> None:
         if not envs.VLLM_USE_V1:
             raise ValueError(
@@ -55,14 +55,14 @@ class LLMEngine:
                 "LLMEngine.from_vllm_config(...) or explicitly set "
                 "VLLM_USE_V1=0 or 1 and report this issue on Github.")
 
-        if stat_loggers is not None:
+        if stat_loggers is not None:# 检查是否传递了统计日志记录器
             raise NotImplementedError(
                 "Passing StatLoggers to LLMEngine in V1 is not yet supported. "
                 "Set VLLM_USE_V1=0 and file and issue on Github.")
 
-        self.vllm_config = vllm_config
-        self.model_config = vllm_config.model_config
-        self.cache_config = vllm_config.cache_config
+        self.vllm_config = vllm_config# 保存 vLLM 配置对象
+        self.model_config = vllm_config.model_config# 保存模型配置对象
+        self.cache_config = vllm_config.cache_config# 保存缓存配置对象
 
         # important: init dp group before init the engine_core
         # In the decoupled engine case this is handled in EngineCoreProc.
@@ -73,13 +73,13 @@ class LLMEngine:
             self.dp_group = None
         self.should_execute_dummy_batch = False
 
-        # Tokenizer (+ ensure liveness if running in another process).
+        # Tokenizer (+ ensure liveness if running in another process).分词器初始化，确保在另一个进程中运行时保持活跃
         self.tokenizer = init_tokenizer_from_configs(
             model_config=vllm_config.model_config,
             scheduler_config=vllm_config.scheduler_config,
             lora_config=vllm_config.lora_config)
 
-        # Processor (convert Inputs --> EngineCoreRequests)
+        # Processor (convert Inputs --> EngineCoreRequests)处理器初始化，将输入转换为 EngineCoreRequests
         self.processor = Processor(vllm_config=vllm_config,
                                    tokenizer=self.tokenizer,
                                    mm_registry=mm_registry)
@@ -88,7 +88,7 @@ class LLMEngine:
         self.output_processor = OutputProcessor(self.tokenizer,
                                                 log_stats=False)
 
-        # EngineCore (gets EngineCoreRequests and gives EngineCoreOutputs)
+        # EngineCore (gets EngineCoreRequests and gives EngineCoreOutputs)引擎核心客户端初始化，获取 EngineCoreRequests 并给出 EngineCoreOutputs
         self.engine_core = EngineCoreClient.make_client(
             multiprocess_mode=multiprocess_mode,
             asyncio_mode=False,
